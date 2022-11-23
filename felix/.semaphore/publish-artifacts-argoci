@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+
+# Copyright (c) 2020 Tigera, Inc. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+echo "Publishing Artifacts from Felix directory"
+# No set -e so that we continue to collect artifacts even if some fail.
+set -x
+
+# set nullglob so that '*' is not used literally if the artifacts dir is empty
+shopt -s nullglob
+
+my_dir=$(dirname "$0")
+repo_dir=$my_dir/..
+
+cd "$repo_dir/artifacts" || exit 1
+
+for file in *; do
+  echo "Uploading file to Artifact storage - '${file}'"
+  gsutil cp "$file" "${CI_ARTIFACT_STEP_STORAGE}/$file"
+  if [[ ${file} =~ .*\.xml ]]; then
+    echo "File is of type XML - Converting to HTML Test results and uploading"
+    if ! command -v npm &> /dev/null; then
+      curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+      apt-get install -y nodejs
+    fi
+    if ! command -v xunit-viewer &> /dev/null; then
+      npm i -g xunit-viewer
+    fi
+    xunit-viewer -r ${file} -o "${file}.html"
+    gsutil cp "${file}.html" "${CI_ARTIFACT_STEP_STORAGE}/${file}.html"
+  fi
+done

@@ -1,0 +1,3 @@
+ciFile: ciworkflow.yaml
+secrets:
+  - docker-hub

@@ -206,6 +206,7 @@ type BPFLib struct {
 }
 
 func NewBPFLib(binDir string) (*BPFLib, error) {
+	log.Info("Looking for bpftool")
 	_, err := exec.LookPath("bpftool")
 	if err != nil {
 		return nil, errors.New("bpftool not found in $PATH")

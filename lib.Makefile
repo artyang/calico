@@ -1211,6 +1211,8 @@ $(REPO_ROOT)/.$(KIND_NAME).created: $(KUBECTL) $(KIND)
 		--name $(KIND_NAME) \
 		--image kindest/node:$(K8S_VERSION)
 
+	# Set default namespace to default
+	KUBECONFIG=$(KIND_KUBECONFIG) $(KUBECTL) config set-context --current --namespace=default
 	# Wait for controller manager to be running and healthy, then create Calico CRDs.
 	while ! KUBECONFIG=$(KIND_KUBECONFIG) $(KUBECTL) get serviceaccount default; do echo "Waiting for default serviceaccount to be created..."; sleep 2; done
 	while ! KUBECONFIG=$(KIND_KUBECONFIG) $(KUBECTL) create -f $(REPO_ROOT)/libcalico-go/config/crd; do echo "Waiting for CRDs to be created"; sleep 2; done
